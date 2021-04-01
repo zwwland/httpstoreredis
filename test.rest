@@ -1,8 +1,9 @@
-POST http://127.0.0.1:3000/getDeviceStatus0
-
-###
 POST http://127.0.0.1:3000/getDeviceStatus
 
 ###
 
 GET  http://127.0.0.1:3000/404
+
+###
+
+GET http://127.0.0.1:3000/
