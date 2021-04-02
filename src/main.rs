@@ -52,18 +52,10 @@ async fn hello_world(mut _req: Request<Body>) -> Result<Response<Body>, Infallib
     let mut response = Response::new(Body::empty());
 
     match (_req.method(), _req.uri().path()) {
-        (&Method::GET, "/") => {
-            println!("{:?}", &POOL);
-            {
-                let mut conn = POOL.get().await.unwrap();
-                cmd("SET")
-                    .arg(&["hello", "199"])
-                    .execute_async(&mut conn)
-                    .await
-                    .unwrap();
-            }
-            *response.body_mut() = Body::from("Hello World");
-        }
+        // (&Method::GET, "/") => {
+        //     println!("{:?}", &POOL);
+        //     *response.body_mut() = Body::from("Hello World");
+        // }
 
         (&Method::POST, "/getDeviceStatus") => {
             {
