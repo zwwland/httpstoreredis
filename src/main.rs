@@ -49,22 +49,30 @@ lazy_static! {
         // x
         pool
     };
+    // #[derive(Debug)]
+    // static ref POOL:MutStatic<Pool> = {
+        // MutStatic::new()
+    // };
+    static ref METHOD: MutStatic<MyStruct<String>> = {
+        MutStatic::new()
+    };
+    static ref PATH: MutStatic<MyStruct<String>> = {
+        MutStatic::new()
+    };
 }
-pub struct MyStruct<T> {value: T}
+#[derive(Clone)]
+pub struct MyStruct<T> {
+    value: T
+}
 impl<T> MyStruct<T> {
     pub fn new(v:T) -> Self {
         MyStruct{value: v}
     }
     //todo trait
-    pub fn getvalue(&self) -> T { self.value }
+    pub fn getvalue(&self) -> &T { &self.value }
     pub fn setvalue(&mut self, v: T) { self.value = v; }
 }
 
-// mut static
-// static mut REDIS_URI: &'static str="";
-// static mut METHOD: &'static str="";
-// static mut SERVER_PATH: &'static str="";
-// static mut SERVER_PORT: u32 = 3000;
 
 async fn hello_world(mut _req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let mut response = Response::new(Body::empty());
@@ -118,15 +126,20 @@ async fn main() {
         (about: "...")
         (@arg REDIS_URI: -i --uri +takes_value "the redis uri")
         (@arg METHOD: -m --method +takes_value "the request method")
-        (@arg SERVER_PATH: -r --root +takes_value "the request root path")
-        (@arg SERVER_PORT: -p --port +takes_value "the http server port")
+        (@arg PATH: -p --path +takes_value "the request root path")
+        (@arg PORT: -l --listen +takes_value "the http server port")
     ).get_matches();
 
+    // setting redis connect
     let uri = matches.value_of("REDIS_URI").unwrap_or("redis://127.0.0.1:6379/4");
+    let mut cfg = Config::default();
+    cfg.url  = Some(uri.to_string());
+    let pool = cfg.create_pool().unwrap();
+    // POOL = pool;
+
     let method = matches.value_of("METHOD").unwrap_or("GET");
     let server_path = matches.value_of("SERVER_PATH").unwrap_or("/");
     let server_port = matches.value_of("SERVER_PORT").unwrap_or("3000");
-    // REDIS_URI = &String::from(uri);
 
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
