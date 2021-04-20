@@ -1,5 +1,10 @@
 #[macro_use]
 extern crate lazy_static;
+extern crate mut_static;
+#[macro_use]
+extern crate clap;
+extern crate deadpool_redis;
+extern crate json;
 
 // 引入包模块
 // extern crate redis;
@@ -9,9 +14,8 @@ extern crate lazy_static;
 // use redis::AsyncCommands;
 // use redis::{RedisResult, RedisError, Connection};
 
-extern crate deadpool_redis;
-extern crate json;
-
+use mut_static::MutStatic;
+use clap::{Arg, App};
 use deadpool_redis::{cmd, Config, Pool};
 // use deadpool_redis::redis::FromRedisValue;
 
@@ -46,7 +50,21 @@ lazy_static! {
         pool
     };
 }
-// static Conn:redis::Connection;
+pub struct MyStruct<T> {value: T}
+impl<T> MyStruct<T> {
+    pub fn new(v:T) -> Self {
+        MyStruct{value: v}
+    }
+    //todo trait
+    pub fn getvalue(&self) -> T { self.value }
+    pub fn setvalue(&mut self, v: T) { self.value = v; }
+}
+
+// mut static
+// static mut REDIS_URI: &'static str="";
+// static mut METHOD: &'static str="";
+// static mut SERVER_PATH: &'static str="";
+// static mut SERVER_PORT: u32 = 3000;
 
 async fn hello_world(mut _req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let mut response = Response::new(Body::empty());
@@ -92,6 +110,25 @@ async fn hello_world(mut _req: Request<Body>) -> Result<Response<Body>, Infallib
 
 #[tokio::main]
 async fn main() {
+
+    let matches = clap_app!(myapp =>
+        (name: "HttpToRedis")
+        (version: "0.1.0")
+        (author: "zwwland <zwwland@gmail.com>")
+        (about: "...")
+        (@arg REDIS_URI: -i --uri +takes_value "the redis uri")
+        (@arg METHOD: -m --method +takes_value "the request method")
+        (@arg SERVER_PATH: -r --root +takes_value "the request root path")
+        (@arg SERVER_PORT: -p --port +takes_value "the http server port")
+    ).get_matches();
+
+    let uri = matches.value_of("REDIS_URI").unwrap_or("redis://127.0.0.1:6379/4");
+    let method = matches.value_of("METHOD").unwrap_or("GET");
+    let server_path = matches.value_of("SERVER_PATH").unwrap_or("/");
+    let server_port = matches.value_of("SERVER_PORT").unwrap_or("3000");
+    // REDIS_URI = &String::from(uri);
+
+
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     let make_svc = make_service_fn(|_conn| async {
         // service_fn converts our function into a `Service`
