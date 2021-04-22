@@ -14,8 +14,8 @@ extern crate json;
 // use redis::AsyncCommands;
 // use redis::{RedisResult, RedisError, Connection};
 
-use mut_static::MutStatic;
-use clap::{Arg, App};
+// use mut_static::MutStatic;
+use clap::{App, Arg, ArgMatches};
 use deadpool_redis::{cmd, Config, Pool};
 // use deadpool_redis::redis::FromRedisValue;
 
@@ -53,26 +53,49 @@ lazy_static! {
     // static ref POOL:MutStatic<Pool> = {
         // MutStatic::new()
     // };
-    static ref METHOD: MutStatic<MyStruct<String>> = {
-        MutStatic::new()
-    };
-    static ref PATH: MutStatic<MyStruct<String>> = {
-        MutStatic::new()
-    };
 }
-#[derive(Clone)]
-pub struct MyStruct<T> {
-    value: T
-}
-impl<T> MyStruct<T> {
-    pub fn new(v:T) -> Self {
-        MyStruct{value: v}
-    }
-    //todo trait
-    pub fn getvalue(&self) -> &T { &self.value }
-    pub fn setvalue(&mut self, v: T) { self.value = v; }
-}
+// #[derive(Clone)]
+// pub struct MyStruct<T> {
+//     value: T
+// }
+// impl<T> MyStruct<T> {
+//     pub fn new(v:T) -> Self {
+//         MyStruct{value: v}
+//     }
+//     //todo trait
+//     pub fn getvalue(&self) -> &T { &self.value }
+//     pub fn setvalue(&mut self, v: T) { self.value = v; }
+// }
 
+fn get_clap_matches() -> ArgMatches<'static> {
+    App::new("My Super Program")
+    .version("1.0")
+    .author("Kevin K. <kbknapp@gmail.com>")
+    .about("Does awesome things")
+    .arg(Arg::new("config")
+        .short('c')
+        .long("config")
+        .value_name("FILE")
+        .about("Sets a custom config file")
+        .takes_value(true))
+    .arg(Arg::new("INPUT")
+        .about("Sets the input file to use")
+        .required(true)
+        .index(1))
+    .arg(Arg::new("v")
+        .short('v')
+        .multiple(true)
+        .takes_value(true)
+        .about("Sets the level of verbosity"))
+    .subcommand(App::new("test")
+        .about("controls testing features")
+        .version("1.3")
+        .author("Someone E. <someone_else@other.com>")
+        .arg(Arg::new("debug")
+            .short('d')
+            .about("print debug information verbosely")))
+    .get_matches()
+}
 
 async fn hello_world(mut _req: Request<Body>) -> Result<Response<Body>, Infallible> {
     let mut response = Response::new(Body::empty());
@@ -119,16 +142,7 @@ async fn hello_world(mut _req: Request<Body>) -> Result<Response<Body>, Infallib
 #[tokio::main]
 async fn main() {
 
-    let matches = clap_app!(myapp =>
-        (name: "HttpToRedis")
-        (version: "0.1.0")
-        (author: "zwwland <zwwland@gmail.com>")
-        (about: "...")
-        (@arg REDIS_URI: -i --uri +takes_value "the redis uri")
-        (@arg METHOD: -m --method +takes_value "the request method")
-        (@arg PATH: -p --path +takes_value "the request root path")
-        (@arg PORT: -l --listen +takes_value "the http server port")
-    ).get_matches();
+    let matches = get_clap_matches();
 
     // setting redis connect
     let uri = matches.value_of("REDIS_URI").unwrap_or("redis://127.0.0.1:6379/4");
